@@ -1,10 +1,10 @@
 import fs from 'fs'
 const inscription = async(req, res,mysql,origin) => {
     const con = mysql.createConnection({
-        host: "localhost",
+        host: "34.175.185.3",
         user: "root",
         password: "root",
-        database: "locationA"
+        database: "rentmanager"
     })
     if (req.body.type == 'add') {
         //--------------------- vérifions si le compte existe déja ----------------
@@ -40,7 +40,7 @@ const inscription = async(req, res,mysql,origin) => {
         //await con.awaitQuery(`USE ${bd}`)
         console.log(bd)
         const con1 = mysql.createConnection({
-            host: "localhost",
+            host: "34.175.185.3",
             user: "root",
             password: "root",
             database: bd,
