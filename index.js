@@ -62,7 +62,7 @@ app.use(express.static('public'))
 
 app.set('trust proxy', true)
 app.post('/update.php', (req, res) => {
-    //console.log('mmonkey dit luffy' + req.session.db)
+    console.log('mmonkey dit luffy' + req.session.db)
     if(con == null ) {
         con = mysql.createConnection({
             host: "localhost",
