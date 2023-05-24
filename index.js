@@ -62,6 +62,7 @@ app.use(express.static('public'))
 
 app.set('trust proxy', true)
 app.post('/update.php', (req, res) => {
+    req.session.db = "location1ltl9vo4d9lh"
     console.log('mmonkey dit luffy' + req.session.db)
     if(con == null ) {
         con = mysql.createConnection({
