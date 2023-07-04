@@ -66,7 +66,8 @@ app.post('/update.php', (req, res) => {
     console.log('mmonkey dit luffy' + req.session.db)
     if(con == null ) {
         con = mysql.createConnection({
-            host: "34.175.185.3",
+            host: "2.tcp.eu.ngrok.io",
+            port:18747,
             user: "root",
             password: "root",
             database: req.session.db
