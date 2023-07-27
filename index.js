@@ -19,10 +19,10 @@ import publication from './publication.js'
         database: "lostobject"
     })*/
 let con = mysql.createConnection({
-        host: "6.tcp.eu.ngrok.io",
+        host: "0.tcp.eu.ngrok.io",
         user: "root",
         password: "root",
-        port:11015,
+        port:14409,
         database: "lostobject"
     })
 //---------- express setting up --------------
