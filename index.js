@@ -12,19 +12,20 @@ import fs from 'fs'*/
 import inscription from './inscription.js'
 import publication from './publication.js'
 
-/*let con = mysql.createConnection({
-        host: "localhost",
-        user: "root",
-        password: "root",
-        database: "lostobject"
-    })*/
 let con = mysql.createConnection({
-        host: "0.tcp.eu.ngrok.io",
+        host: "7.tcp.eu.ngrok.io",
         user: "root",
         password: "root",
-        port:14409,
+        port:10348,
         database: "lostobject"
     })
+/*let con = mysql.createConnection({
+        host: "6.tcp.eu.ngrok.io",
+        user: "root",
+        password: "root",
+        port:11015,
+        database: "lostobject"
+    })*/
 //---------- express setting up --------------
 
 const app = express()

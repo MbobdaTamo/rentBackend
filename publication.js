@@ -119,8 +119,30 @@ const publication = async(req, res,con) => {
         WHERE deleted = 0 AND kind = 'lost'
         AND creator = CAST(UNHEX(HEX(AES_DECRYPT(UNHEX(${JSON.stringify(req.body.id)}),'benjaminmendy2000'))) AS CHAR(100))
         `)
+        let closed = await con.awaitQuery(`
+        SELECT
+        Object.id as id,type,owner,description,Country,city,quater,place,
+        kind,state,imgName,img0,img1,img2,img3,
+        DATE_FORMAT(when1,"%Y-%m-%d") as when1,
+        DATE_FORMAT(when2,"%Y-%m-%d") as when2,
+        DATE_FORMAT(creationDate,"%Y-%m-%d") as creationDate,
+        DATE_FORMAT(settleDate,"%Y-%m-%d") as settleDate,
+        reference, User.name, User.tel
+        FROM Object, User
+        WHERE deleted = 2 AND Object.reference = User.id 
+        AND creator = CAST(UNHEX(HEX(AES_DECRYPT(UNHEX(${JSON.stringify(req.body.id)}),'benjaminmendy2000'))) AS CHAR(100))
+        `)
+
+        let founders = await con.awaitQuery(`
+        SELECT User.id, User.name,User.tel, COUNT(User.id) as found
+        FROM User, Object
+        WHERE ( Object.reference = User.id AND Object.kind = "lost" AND deleted = 2)
+        OR (Object.creator = User.id AND Object.kind = "found" AND deleted = 2)
+        GROUP BY User.id
+        ORDER BY found DESC
+        `)
         
-        res.send({found:found,lost:lost})
+        res.send({found:found,lost:lost,closed:closed,founders:founders})
     }
     else if(req.body.aim === "delete") {
         await con.awaitQuery(`UPDATE Object SET
@@ -201,6 +223,74 @@ const publication = async(req, res,con) => {
         ORDER BY pts DESC LIMIT 100
         `)
         res.send(pubs)
+    }
+    else if(req.body.aim === "claim") {
+        let refs = await con.awaitQuery(`SELECT * FROM Referencing
+        WHERE object = ${JSON.stringify(req.body.object)}
+        AND reference = CAST(UNHEX(HEX(AES_DECRYPT(UNHEX(${JSON.stringify(req.body.user)}),'benjaminmendy2000'))) AS CHAR(100))
+        `)
+        if(refs.length > 0) {
+            await con.awaitQuery(`UPDATE Referencing
+            SET deleted = 0
+            WHERE object = ${JSON.stringify(req.body.object)}
+            AND reference = CAST(UNHEX(HEX(AES_DECRYPT(UNHEX(${JSON.stringify(req.body.user)}),'benjaminmendy2000'))) AS CHAR(100))
+            `)
+            res.send('done')
+            return    
+        }
+        await con.awaitQuery(`INSERT INTO 
+        Referencing (object, reference)
+        VALUES (${JSON.stringify(req.body.object)},
+        CAST(UNHEX(HEX(AES_DECRYPT(UNHEX(${JSON.stringify(req.body.user)}),'benjaminmendy2000'))) AS CHAR(100)))`)
+        
+        res.send('done')
+    }
+    else if(req.body.aim === "isClaimed") {
+        let refs = await con.awaitQuery(`SELECT * FROM Referencing
+        WHERE object = ${JSON.stringify(req.body.object)}
+        AND deleted = 0
+        AND reference = CAST(UNHEX(HEX(AES_DECRYPT(UNHEX(${JSON.stringify(req.body.user)}),'benjaminmendy2000'))) AS CHAR(100))
+        `)
+        if(refs.length > 0) res.send(true)
+        else res.send(false)
+    }
+    else if(req.body.aim === "unclaim") {
+        await con.awaitQuery(`UPDATE Referencing
+        SET deleted = 1
+        WHERE object = ${JSON.stringify(req.body.object)}
+        AND reference = CAST(UNHEX(HEX(AES_DECRYPT(UNHEX(${JSON.stringify(req.body.user)}),'benjaminmendy2000'))) AS CHAR(100))
+        `)
+        res.send('done')
+    }
+    else if(req.body.aim === "claimElts") {
+        let refs = await con.awaitQuery(`SELECT  Referencing.id,User.id as claimer,User.name,User.tel
+        FROM Referencing,User
+        WHERE object = ${JSON.stringify(req.body.object)}
+        AND Referencing.reference = User.id
+        AND deleted = 0
+        `)
+        res.send(refs)
+    }
+    else if(req.body.aim === "reject") {
+        await con.awaitQuery(`UPDATE Referencing
+        SET deleted = 1
+        WHERE id = ${JSON.stringify(req.body.id)}
+        `)
+        res.send('done')
+    }
+    else if(req.body.aim === "confirm") {
+        //--- asign the reference -----------------
+        let d = new Date()
+        d = d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate()+' '+
+            d.getHours()+':'+d.getMinutes()+':'+d.getSeconds()
+        await con.awaitQuery(`UPDATE Object
+        SET reference = ${JSON.stringify(req.body.claimer)},
+        settleDate = ${JSON.stringify(d)},
+        deleted = 2
+        WHERE id = ${JSON.stringify(req.body.object)}
+        `)
+
+        res.send('done')
     }
 }
 export default publication  
