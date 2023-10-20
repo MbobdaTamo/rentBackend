@@ -1,3 +1,6 @@
+import https from 'https'
+import fs from 'fs'
+
 import mysql from 'mysql-await'
 import express from 'express'
 import cors from 'cors'
@@ -47,7 +50,7 @@ let cors1 = {origin:function(origin,callback){
     return callback(null,true)
 },methods:["POST","OPTIONS"],credentials:true}
 app.use(cors(cors1))
-const port = 3000
+const port = 3002
 
 // body parser to retrieve informations
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -113,6 +116,19 @@ app.post('/news.php', (req, res) => {
     //res.send("<span>vueillez mettre à jour </br><a href='whatheverthehell'>mettre à jour</a></span>")
 })
 
+
+let privateKey = fs.readFileSync( '/etc/letsencrypt/live/renting.sassayer.com/privkey.pem' )
+let certificate = fs.readFileSync( '/etc/letsencrypt/live/renting.sassayer.com/fullchain.pem' )
+
+https.createServer({
+    key: privateKey,
+    cert: certificate
+}, app).listen(port);
+
+
+
+/*
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
+*/
