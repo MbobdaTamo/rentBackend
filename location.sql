@@ -90,6 +90,15 @@ CREATE TABLE `Locataire` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+DROP TABLE IF EXISTS `log`;
+CREATE TABLE `log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `infos` text NOT NULL,
+  `date` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 DROP TABLE IF EXISTS `Manager`;
 CREATE TABLE `Manager` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -116,4 +125,4 @@ CREATE TABLE `Payment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 2022-12-15 07:25:23
+-- 2023-10-21 12:19:47
