@@ -1,6 +1,5 @@
 import https from 'https'
 import fs from 'fs'
-
 import mysql from 'mysql-await'
 import express from 'express'
 import cors from 'cors'
@@ -21,16 +20,8 @@ import charge from './charge.js'
 import inscription from './inscription.js'
 
 // connect to mysql db
-let con = mysql.createConnection({
-    host: "localhost",
-    //port:18747,
-    user: "root",
-    password: "root",
-    database: "location"
-})
-//let result = await con.awaitQuery(`SELECT * FROM Locataire`)
-//console.log(result)
-//let con = null
+
+let con = {}
 //---------- express setting up --------------
 
 const app = express()
@@ -39,7 +30,7 @@ app.use(session({
     secret: "my fuckinggg secret sentences",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure:false, httpOnly:false,sameSite:'None',maxAge: 1000 * 60 * 60 * 24 * 30 }
+    cookie: { secure:false, httpOnly:false,sameSite:'None',maxAge: 1000*60*10 }
 }));
 let allowedDomains = []
 let origine = ''
@@ -66,49 +57,50 @@ app.use(
 )
 app.use(express.static('public'))
 
-app.set('trust proxy', 1)
+app.set('trust proxy', true)
 app.post('/update.php', (req, res) => {
     console.log('mmonkey dit luffy' + req.session.db)
-    if(con == null ) {
-        con = mysql.createConnection({
+    if(typeof req.session.db == 'undefined') res.send('error')
+    if(con[req.session.db] == null ) {
+        con[req.session.db] = mysql.createConnection({
             host: "localhost",
             user: "root",
             password: "root",
-            database: 'location'
+            database: req.session.db
         })
-        update(req,res,con)
+        update(req,res,con[req.session.db])
     }
-    else update(req,res,con)
+    else update(req,res,con[req.session.db])
 })
 app.get('/', (req, res) => {
     res.send('bonjour Gonzalo Lira')
 })
 app.post('/compte.php', (req, res) => {
-    compte(req,res,con)
+    compte(req,res,con[req.session.db])
 })
 app.post('/cites.php', (req, res) => {
-    cites(req,res,con)
+    cites(req,res,con[req.session.db])
 })
 app.post('/chambres.php', (req, res) => {
-    chambres(req,res,con)
+    chambres(req,res,con[req.session.db])
 })
 app.post('/contrat.php', (req, res) => {
-    contrat(req,res,con)
+    contrat(req,res,con[req.session.db])
 })
 app.post('/saveLocImg.php', (req, res) => {
     saveImage(req,res)
 })
 app.post('/saveLocataire.php', (req, res) => {
-    saveLocataire(req,res,con)
+    saveLocataire(req,res,con[req.session.db])
 })
 app.post('/locataire.php', (req, res) => {
-    locataire(req,res,con)
+    locataire(req,res,con[req.session.db])
 })
 app.post('/charge.php', (req, res) => {
-    charge(req,res,con)
+    charge(req,res,con[req.session.db])
 })
 app.post('/inscription.php', (req, res) => {
-    if(req.body.type == 'log' || req.body.type == 'add') con = null
+    //if(req.body.type == 'log' || req.body.type == 'add') con = null
     inscription(req,res,mysql,origine)
 })
 app.post('/news.php', (req, res) => {
@@ -116,6 +108,10 @@ app.post('/news.php', (req, res) => {
     //res.send("<span>vueillez mettre à jour </br><a href='whatheverthehell'>mettre à jour</a></span>")
 })
 
+process.on('uncaughtException', err => {
+    console.log(`Uncaught Exception: ${err.message}`)
+    //process.exit(0)
+})
 
 let privateKey = fs.readFileSync( '/etc/letsencrypt/live/renting.sassayer.com/privkey.pem' )
 let certificate = fs.readFileSync( '/etc/letsencrypt/live/renting.sassayer.com/fullchain.pem' )
@@ -125,10 +121,7 @@ https.createServer({
     cert: certificate
 }, app).listen(port);
 
-
-
 /*
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
-})
-*/
+})*/
