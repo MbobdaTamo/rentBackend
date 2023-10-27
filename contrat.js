@@ -43,15 +43,10 @@ const contrat = async(req, res,con) => {
     
         //-- updating balance -----------
         await con.awaitQuery(`UPDATE ContratLocation 
-            SET balance = balance + ${JSON.stringify(req.body.payment)},
-            totalPayer = totalPayer + ${JSON.stringify(req.body.payment)} 
+            SET totalPayer = totalPayer + ${JSON.stringify(req.body.payment)} 
             WHERE id = ${JSON.stringify(req.body.contrat)}`)
-    
-        // ----- updating nbrMoisPayer --------------------
-        await con.awaitQuery(`UPDATE ContratLocation SET 
-            nbrMoisPayer = (totalPayer - totalPayer%loyer)/loyer 
-            WHERE id = ${JSON.stringify(req.body.contrat)}`)
-        console.log(id[0].id)
+
+        //console.log(id[0].id)
         res.send(JSON.stringify(id[0].id))
     
     }
@@ -60,13 +55,7 @@ const contrat = async(req, res,con) => {
         await con.awaitQuery(`DELETE FROM Payment WHERE id = ${JSON.stringify(req.body.id)}`)
     
         await con.awaitQuery(`UPDATE ContratLocation SET 
-            balance = balance - ${JSON.stringify(req.body.payment)}, 
             totalPayer = totalPayer - ${JSON.stringify(req.body.payment)} 
-            WHERE id = ${JSON.stringify(req.body.contrat)}`)
-    
-        // ----- updating nbrMoisPayer --------------------
-        await con.awaitQuery(`UPDATE ContratLocation SET 
-            nbrMoisPayer = (totalPayer - totalPayer%loyer)/loyer 
             WHERE id = ${JSON.stringify(req.body.contrat)}`)
             
         res.send('fait');

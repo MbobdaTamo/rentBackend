@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1024mm"
+   height="1024mm"
+   viewBox="0 0 1024 1024"
+   version="1.1"
+   id="svg5"
+   inkscape:export-filename="/home/tamo/projects/renting/resources/ico-only.png"
+   inkscape:export-xdpi="25.4"
+   inkscape:export-ydpi="25.4"
+   inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
+   sodipodi:docname="ico.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:snap-object-midpoints="true"
+     inkscape:zoom="0.044524174"
+     inkscape:cx="583.95244"
+     inkscape:cy="291.97622"
+     inkscape:window-width="1366"
+     inkscape:window-height="707"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g34016" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-56.153876,-79.985694)">
+    <g
+       id="g34016">
+      <rect
+         style="fill:#109fc4;fill-opacity:1;stroke:#109fc4;stroke-width:19.5815;stroke-linejoin:round;stroke-miterlimit:0;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect24546"
+         width="1004.4185"
+         height="1004.4185"
+         x="65.944626"
+         y="89.776443"
+         ry="31.645369"
+         inkscape:export-filename="/home/tamo/projects/renting/resources/ico-only.png"
+         inkscape:export-xdpi="25.4"
+         inkscape:export-ydpi="25.4"
+         inkscape:label="rect24546" />
+      <text
+         xml:space="preserve"
+         style="font-size:566.703px;line-height:1.15;font-family:sans-serif;fill:#ffffff;stroke-width:3.93542"
+         x="176.33188"
+         y="798.27332"
+         id="text3290"><tspan
+           sodipodi:role="line"
+           id="tspan3288"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:566.703px;font-family:'Noto Serif Lao';-inkscape-font-specification:'Noto Serif Lao';fill:#ffffff;stroke-width:3.93542"
+           x="176.33188"
+           y="798.27332">GL</tspan></text>
+    </g>
+  </g>
+</svg>

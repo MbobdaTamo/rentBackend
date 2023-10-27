@@ -25,7 +25,7 @@ const update = async(req, res,con) => {
     contrat.chambre,
     DATE_FORMAT(contrat.date_debut,"%Y/%m/%d") as date_debut,
     contrat.loyer,
-    contrat.balance,
+    contrat.totalPayer+contrat.totalCharge as balance,
     contrat.totalPayer,
     contrat.totalCharge,
     contrat.nbrMoisPayer,
