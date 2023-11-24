@@ -3,8 +3,8 @@ const chambres = async(req, res,con) => {
     if (req.body.type == 'login') {
         //--------------------- vérifions si le compte existe déja --------------
         let result = await con.awaitQuery(`SELECT * FROM Manager 
-                     WHERE login = ${JSON.stringify(req.body.login)} 
-                     AND password = ${JSON.stringify(req.body.password)}`)
+                WHERE login = ${JSON.stringify(req.body.login)} 
+                AND password = ${JSON.stringify(req.body.password)}`)
         if (result.length == 0) {
             res.send('nothing')
         } else {
@@ -18,7 +18,7 @@ const chambres = async(req, res,con) => {
         }
     }
     if (req.body.type == 'add') {
-        //--------------------- vérifions si le compte existe déja ---------------------
+        //--------------------- vérifions si la chambre existe déja ---------------------
         let result = await con.awaitQuery(`SELECT id FROM Chambre WHERE 
                 nom = ${JSON.stringify(req.body.nom)} AND deleted = 0`)
 
@@ -38,13 +38,21 @@ const chambres = async(req, res,con) => {
         }
     }
     else if (req.body.type == 'modify') {
+        //--------------------- vérifions si le compte existe déja ---------------------
+        let result = await con.awaitQuery(`SELECT id FROM Chambre WHERE 
+        nom = ${JSON.stringify(req.body.nom)} AND deleted = 0`)
+        if(result.length > 0) {
+            res.send('exist')
+            return
+        }
+
         await con.awaitQuery(`UPDATE Chambre SET 
         nom = ${JSON.stringify(req.body.nom)}, 
         location = ${JSON.stringify(req.body.location)},
         loyerParDefaut = ${JSON.stringify(req.body.loyerParDefaut)}, 
         description = ${JSON.stringify(req.body.description)} 
         WHERE id = ${JSON.stringify(req.body.id)}`)
-        res.send(null)
+        res.send('done')
     }
     else if (req.body.type == 'delete') {
         await con.awaitQuery(`UPDATE Chambre SET deleted = 1 WHERE id = ${JSON.stringify(req.body.id)}`)

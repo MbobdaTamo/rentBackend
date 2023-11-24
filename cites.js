@@ -18,7 +18,7 @@ const cites = async(req, res,con) => {
         }
     }
     if (req.body.type == 'add') {
-        //--------------------- vérifions si le compte existe déja ----------------
+        //--------------------- vérifions si la cite existe déja ----------------
         let result = await con.awaitQuery(`SELECT id FROM Cite WHERE 
                     nom = ${JSON.stringify(req.body.nom)} AND deleted = 0`)
         if (result.length == 0) {
@@ -33,6 +33,14 @@ const cites = async(req, res,con) => {
         }
     }
     else if (req.body.type == 'modify') {
+        //--------------------- vérifions si la cite existe déja ---------------
+        let result = await con.awaitQuery(`SELECT id FROM Cite WHERE 
+                    nom = ${JSON.stringify(req.body.nom)} AND deleted = 0`)
+        if(result.length > 0) {
+            res.send('exist')
+            return
+        }
+        
         await con.awaitQuery(`UPDATE Cite SET 
                 nom = ${JSON.stringify(req.body.nom)}, 
                 location = ${JSON.stringify(req.body.location)}, 
