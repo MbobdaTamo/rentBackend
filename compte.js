@@ -1,4 +1,10 @@
 const compte = async(req, res,con) => {
+    if(typeof req.session.login.role != 'undefined' && req.session.login.role != "superuser") {
+        res.send(null)
+        return
+    }
+
+
     
     if (req.body.type == 'login') {
         //--------------------- vérifions si le compte existe déja --------------

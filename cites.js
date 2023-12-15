@@ -1,5 +1,11 @@
 const cites = async(req, res,con) => {
     
+    if(req.session.login.role != "superuser") {
+        res.send(null)
+        return
+    }
+
+
     if (req.body.type == 'login') {
         //--------------------- vérifions si le compte existe déja --------------
         let result = await con.awaitQuery(`SELECT * FROM Manager 
@@ -50,6 +56,9 @@ const cites = async(req, res,con) => {
     }
     else if (req.body.type == 'delete') {
         await con.awaitQuery(`UPDATE Cite SET deleted = 1 WHERE id = ${JSON.stringify(req.body.id)}`)
+        await con.awaitQuery(`DELETE FROM Access
+        WHERE cite = ${JSON.stringify(req.body.id)}
+        `)
         res.send('fait')
     }
 }

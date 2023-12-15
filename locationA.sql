@@ -15,9 +15,9 @@ CREATE TABLE `Compte` (
   `tel` int(11) NOT NULL,
   `password` varchar(30) NOT NULL,
   `origin` varchar(100) NOT NULL,
-  `isAdmin` int(11) NOT NULL DEFAULT 0,
+  `role` varchar(35) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 2022-12-15 15:29:33
+-- 2023-12-15 18:51:29

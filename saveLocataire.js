@@ -1,4 +1,8 @@
 const saveLocataire = async(req, res,con) => {
+    if(req.session.login.role != "superuser") {
+        res.send(null)
+        return
+    }
 
     //--------------------- vérifions si le locataire existe déja -----------------------
     let result = await con.awaitQuery(`SELECT id FROM Locataire WHERE 

@@ -1,20 +1,14 @@
-import update1 from './update1.js'
+const update1 = async(req,con) => {
+    
+    let citeQuery = `SELECT cite.*, COUNT(chambre.id) as nbrChambre
+    FROM (SELECT Cite.* FROM Cite,Access WHERE Cite.deleted = 0
+        AND Cite.id = Access.cite
+        AND Access.manager = ${JSON.stringify(req.session.login.id)}) as cite
 
-const update = async(req, res,con) => {
-    
-    if(req.session.login.role != "superuser") {
-        let datas = await update1(req,con)
-        res.send(datas)
-        return
-    }
-    
-    let citeQuery = `SELECT Cite.*, COUNT(chambre.id) as nbrChambre
-    FROM Cite 
     LEFT JOIN (SELECT Chambre.* FROM Chambre WHERE Chambre.deleted = 0 ) as chambre
-    ON Cite.id = chambre.cite
-    WHERE Cite.deleted = 0
-    GROUP BY Cite.id
-    ORDER BY Cite.nom`
+    ON cite.id = chambre.cite
+    GROUP BY cite.id
+    ORDER BY cite.nom`
 
     let chambreQuery = `SELECT Chambre.*, COUNT(contrat.id) AS occupied
     FROM Chambre
@@ -49,19 +43,33 @@ const update = async(req, res,con) => {
     (SELECT * FROM ContratLocation WHERE ContratLocation.deleted != 1) as contrat,
     (SELECT * FROM Locataire WHERE Locataire.deleted = 0) as loc,
     (SELECT * FROM Chambre WHERE Chambre.deleted = 0) as chb,
-    (SELECT * FROM Cite WHERE Cite.deleted = 0) as cit
+
+    (SELECT Cite.* FROM Cite, Access WHERE Cite.deleted = 0
+        AND Cite.id = Access.cite
+        AND Access.manager = ${JSON.stringify(req.session.login.id)}
+    ) as cit
+
+    
     WHERE
     contrat.locataire = loc.id
     AND contrat.chambre = chb.id
-    AND chb.cite = cit.id`
+    AND chb.cite = cit.id
+    GROUP BY contrat.id
+    `
 
-    let paymentQuery = `SELECT id,
-    manager,
-    managerNom,
-    contratLocation,
-    montant,
-    DATE_FORMAT(date,"%Y/%m/%d") as date
-    FROM Payment ORDER BY id DESC`
+    let paymentQuery = `SELECT Payment.id as id,
+    Payment.manager as manager,
+    Payment.managerNom as managerNom,
+    Payment.contratLocation as contratLocation,
+    Payment.montant as montant,
+    DATE_FORMAT(Payment.date,"%Y/%m/%d") as date
+    FROM Payment, ContratLocation, Chambre, Access
+    WHERE Payment.contratLocation = ContratLocation.id
+    AND ContratLocation.chambre =  Chambre.id
+    AND Chambre.cite = Access.cite
+    AND Access.manager = ${JSON.stringify(req.session.login.id)}
+    GROUP BY Payment.id
+    ORDER BY id DESC`
 
     let chargeQuery = `SELECT id,
     manager,
@@ -85,7 +93,17 @@ const update = async(req, res,con) => {
 
     let toDay = new Date()
 
-    let locataireQuery = `SELECT * FROM Locataire WHERE deleted = 0 ORDER BY nom`
+    let locataireQuery = `
+    SELECT Locataire.* FROM Locataire, ContratLocation, Chambre,Cite, Access
+    WHERE Locataire.deleted = 0
+    AND Locataire.id = ContratLocation.locataire
+    AND ContratLocation.chambre = Chambre.id
+    AND Chambre.cite = Cite.id
+    AND Cite.id = Access.cite
+    AND Access.manager = ${JSON.stringify(req.session.login.id)}
+    GROUP BY Locataire.id
+    ORDER BY Locataire.nom
+    `
     let datas = {};
     datas = {cites:await con.awaitQuery(citeQuery)}
     datas = {...datas, chambres:await con.awaitQuery(chambreQuery)}
@@ -95,6 +113,7 @@ const update = async(req, res,con) => {
     datas = {...datas, charges:await con.awaitQuery(chargeQuery)}
     datas = {...datas, variants:await con.awaitQuery(variantQuery)}
     datas = {...datas, serverDate: toDay.getFullYear()+'-'+(toDay.getMonth()+1)+'-'+toDay.getDate() }
-    res.send(datas)
+    
+    return datas
 }
-export default update
+export default update1

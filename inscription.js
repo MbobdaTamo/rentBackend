@@ -1,5 +1,15 @@
 import fs from 'fs'
 const inscription = async(req, res,mysql,origin) => {
+    if(typeof req.session.login === 'undefined')  {
+        req.session.login = {role:''}
+    }
+    if(req.session.login.role != "superuser" &&  req.body.type != 'log' && req.body.type != 'add') {
+        res.send(null)
+        return
+    }
+
+
+
     const con = mysql.createConnection({
         host: "localhost",
         user: "root",
@@ -14,16 +24,19 @@ const inscription = async(req, res,mysql,origin) => {
             tel = ${JSON.stringify(req.body.name)} OR
             nom = ${JSON.stringify(req.body.tel)} OR
             nom = ${JSON.stringify(req.body.name)})`)
-        if (result.length == 0) {
-            //------------------ inscription du compte dans la bd -----------------------
-            await con.awaitQuery(`INSERT INTO Compte(nom,tel,password,origin,bd,isAdmin)
-                VALUES (${JSON.stringify(req.body.name)},
-                ${JSON.stringify(req.body.tel)},
-                ${JSON.stringify(req.body.password)},
-                ${JSON.stringify(origin)},'',1)`)
-        } else {
+
+        if (result.length > 0) {
             res.send('exist');
+            return
         }
+        //------------------ inscription du compte dans la bd -----------------------
+        await con.awaitQuery(`INSERT INTO Compte(nom,tel,password,origin,bd,role)
+            VALUES (${JSON.stringify(req.body.name)},
+            ${JSON.stringify(req.body.tel)},
+            ${JSON.stringify(req.body.password)},
+            ${JSON.stringify(origin)},'','superuser')`)
+        // role : superAdmin => ha
+    
         //--------------------- récupéront l'id et utilisons le pour le nom de la bd ----------------
         result = await con.awaitQuery(`SELECT id FROM Compte WHERE 
                     nom = ${JSON.stringify(req.body.name)} AND
@@ -47,51 +60,64 @@ const inscription = async(req, res,mysql,origin) => {
             multipleStatements: true
         })
         const query = fs.readFileSync('./location.sql', 'utf8')
-        await con1.awaitQuery(query) // create column of data base
+        await con1.awaitQuery(query) // create columns of data base
+
+        /*------- inscrivons aussi le compte dans la bd -----------------------------*/
+        await con1.awaitQuery(`INSERT INTO Manager(nom,tel,password,role)
+        VALUES (${JSON.stringify(req.body.name)},
+        ${JSON.stringify(req.body.tel)},
+        ${JSON.stringify(req.body.password)},
+        'superuser')`)
+        
         res.send('done!!!')
     }
     else if(req.body.type == 'log') {
-
-        console.log('hahah')
-        console.log(req.session.triedToLog)
-        if(typeof req.session.triedToLog === 'undefined') {
-            req.session.triedToLog = 0
-        }
-        else {
-            if(req.session.triedToLog > 30) {
-                res.send('triedTooMuchTime')
-                return
-            }
-            req.session.triedToLog ++
-        }
         //--------------------- vérifions si le compte existe déja --------------
         let result = await con.awaitQuery(`SELECT * FROM Compte
-        WHERE password = ${JSON.stringify(req.body.password)}
+        WHERE password = ${JSON.stringify(req.body.password)} 
         AND (tel = ${JSON.stringify(req.body.tel)} OR 
             nom = ${JSON.stringify(req.body.tel)})`)
 
         if (result.length == 0) {
             res.send('nothing')
+            return
         } else {
-        let datas = {};
-        datas = {...datas, login: result[0].nom}
-        datas = {...datas, id: result[0].id}
-        datas = {...datas, isAdmin: result[0].isAdmin}
-        datas = {...datas, origin: result[0].origin}
-        datas = {...datas, bd: result[0].bd}
-        req.session.login = datas
 
         req.session.db = result[0].bd // saving db name to reuse
+        //----------- gettin from the bd admin ------------------------------------------------
+          const con1 = mysql.createConnection({
+            host: "localhost",
+            user: "root",
+            password: "root",
+            database: req.session.db
+        })
+        let result1 = await con1.awaitQuery(`SELECT * FROM Manager
+        WHERE password = ${JSON.stringify(req.body.password)} 
+        AND (tel = ${JSON.stringify(req.body.tel)} OR 
+            nom = ${JSON.stringify(req.body.tel)})`)
+        req.session.login = result1[0]
+        let datas = {login: result1[0].nom, id: result1[0].id,
+        tel: result1[0].tel,role: result1[0].role}
 
         res.send(datas)
         }
     }
     else if (req.body.type == 'get') {
         //----------- get admin ------------------------------------------------
-        let result = await con.awaitQuery(`SELECT * FROM Compte WHERE bd = ${JSON.stringify(req.session.login.bd)} 
-        AND id != ${req.session.login.id}`)
-        res.send(result)
+        const con1 = mysql.createConnection({
+            host: "localhost",
+            user: "root",
+            password: "root",
+            database: req.session.db
+        })
+
+        let comptes = await con1.awaitQuery(`SELECT Manager.*, Access.cite as cite FROM Manager, Access
+        WHERE Manager.id = Access.manager
+        AND Manager.id != ${req.session.login.id}`)
+        res.send(comptes)
     }
+
+
     else if (req.body.type == 'addCompte') {
         //--------------------- vérifions si le compte existe déja ----------------
         let result = await con.awaitQuery(`SELECT * FROM Compte
@@ -100,25 +126,62 @@ const inscription = async(req, res,mysql,origin) => {
             tel = ${JSON.stringify(req.body.login)} OR
             nom = ${JSON.stringify(req.body.tel)} OR
             nom = ${JSON.stringify(req.body.login)})`)
-        if (result.length == 0) {
-            //------------------ inscription du compte dans la bd -----------------------
-            await con.awaitQuery(`INSERT INTO Compte(nom,tel,password,origin,bd,isAdmin)
-                VALUES (${JSON.stringify(req.body.login)},
-                ${JSON.stringify(req.body.tel)},
-                ${JSON.stringify(req.body.password)},
-                ${JSON.stringify(req.session.login.origin)},
-                ${JSON.stringify(req.session.login.bd)},
-                ${JSON.stringify(req.body.isAdmin)})`)
-            
-
-            //----------- get admin -----------------------------------------------
-            let result = await con.awaitQuery(`SELECT * FROM Compte WHERE bd = ${JSON.stringify(req.session.login.bd)} 
-            AND id != ${req.session.login.id}`)
-            res.send(result)
-        } else {
-            res.send('exist');
+        if (result.length > 0) {
+            res.send('exist')
+            return
         }
+        //------------------ inscription du compte dans la bd -----------------------
+        await con.awaitQuery(`INSERT INTO Compte(nom,tel,password,origin,bd,role)
+            VALUES (${JSON.stringify(req.body.login)},
+            ${JSON.stringify(req.body.tel)},
+            ${JSON.stringify(req.body.password)},
+            '',
+            ${JSON.stringify(req.session.db)},
+            ${JSON.stringify(req.body.role)})`)
+        
+
+
+        //-------------- inscription dans la bd du compte  -----------------------------
+        
+        const con1 = mysql.createConnection({
+            host: "localhost",
+            user: "root",
+            password: "root",
+            database: req.session.db
+        })
+
+        await con1.awaitQuery(`INSERT INTO Manager(nom,tel,password,role)
+        VALUES (${JSON.stringify(req.body.login)},
+        ${JSON.stringify(req.body.tel)},
+        ${JSON.stringify(req.body.password)},
+        ${JSON.stringify(req.body.role)})`)
+
+        if(req.body.role != 'superuser') {
+        
+            //-------- adding the relation with the cities that the account has access to ----
+            //---récupéront l'id et utilisons le pour le nom de la bd ----------------
+            let manager = await con1.awaitQuery(`SELECT id FROM Manager WHERE 
+                        nom = ${JSON.stringify(req.body.login)} AND
+                        tel = ${JSON.stringify(req.body.tel)} AND
+                        password = ${JSON.stringify(req.body.password)}`)
+
+            let i = 0, cities = req.body.cities
+            for(i=0;i<cities.length;i++) {
+                await con1.awaitQuery(`INSERT INTO Access(manager,cite)
+                VALUES (${JSON.stringify(manager[0].id)},
+                ${JSON.stringify(cities[i])})`)
+            }
+        }
+
+        //----------- get admin ------------------------------------------------
+        let comptes = await con1.awaitQuery(`SELECT Manager.*, Access.cite as cite FROM Manager, Access
+        WHERE Manager.id = Access.manager
+        AND Manager.id != ${req.session.login.id}`)
+        res.send(comptes)
+
     }
+
+
     else if (req.body.type == 'modify') {
         //--------------------- vérifions si le compte existe déja ----------------
         let result = await con.awaitQuery(`SELECT * FROM Compte
@@ -140,13 +203,32 @@ const inscription = async(req, res,mysql,origin) => {
         }
     }
     else if (req.body.type == 'delete') {
-        await con.awaitQuery(`DELETE FROM Compte WHERE id = ${JSON.stringify(req.body.id)} 
-        AND bd = ${JSON.stringify(req.session.login.bd)}`)
+        await con.awaitQuery(`DELETE FROM Compte
+        WHERE nom = ${JSON.stringify(req.body.nom)} 
+        AND bd = ${JSON.stringify(req.session.db)}
+        AND tel = ${JSON.stringify(req.body.tel)}
+        AND password = ${JSON.stringify(req.body.password)}
+        `)
+        //----------- delete also in the account db ------------------------------------------------
+        const con1 = mysql.createConnection({
+            host: "localhost",
+            user: "root",
+            password: "root",
+            database: req.session.db
+        })
+        await con1.awaitQuery(`DELETE FROM Access
+        WHERE manager = ${JSON.stringify(req.body.id)}
+        `)
+        await con1.awaitQuery(`DELETE FROM Manager
+        WHERE nom = ${JSON.stringify(req.body.nom)} 
+        AND tel = ${JSON.stringify(req.body.tel)}
+        AND password = ${JSON.stringify(req.body.password)}
+        `)
         //----------- get admin ------------------------------------------------
-        
-        let result = await con.awaitQuery(`SELECT * FROM Compte WHERE bd = ${JSON.stringify(req.session.login.bd)} 
-        AND id != ${req.session.login.id}`)
-        res.send(result)
+        let comptes = await con1.awaitQuery(`SELECT Manager.*, Access.cite as cite FROM Manager, Access
+        WHERE Manager.id = Access.manager
+        AND Manager.id != ${req.session.login.id}`)
+        res.send(comptes)
     }
 }
 export default inscription

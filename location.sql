@@ -7,6 +7,20 @@ SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
 SET NAMES utf8mb4;
 
+DROP TABLE IF EXISTS `Access`;
+CREATE TABLE `Access` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `manager` int(11) NOT NULL,
+  `cite` int(11) NOT NULL,
+  `isActive` int(11) NOT NULL DEFAULT 1 COMMENT '1 = yes, 0= no',
+  PRIMARY KEY (`id`),
+  KEY `manager` (`manager`),
+  KEY `cite` (`cite`),
+  CONSTRAINT `Access_ibfk_1` FOREIGN KEY (`manager`) REFERENCES `Manager` (`id`),
+  CONSTRAINT `Access_ibfk_2` FOREIGN KEY (`cite`) REFERENCES `Cite` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
 DROP TABLE IF EXISTS `Chambre`;
 CREATE TABLE `Chambre` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -61,7 +75,9 @@ CREATE TABLE `ContratLocation` (
   `totalPayer` int(11) NOT NULL DEFAULT 0,
   `totalCharge` int(11) NOT NULL DEFAULT 0,
   `nbrMoisPayer` int(11) NOT NULL DEFAULT 0,
+  `payDebutMois` int(11) NOT NULL COMMENT '0 = non 1= oui',
   `deleted` int(11) NOT NULL DEFAULT 0,
+  `stopped` datetime NOT NULL DEFAULT '2100-01-01 00:00:00',
   PRIMARY KEY (`id`),
   KEY `locataire` (`locataire`),
   KEY `chambre` (`chambre`),
@@ -102,9 +118,10 @@ CREATE TABLE `log` (
 DROP TABLE IF EXISTS `Manager`;
 CREATE TABLE `Manager` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `login` varchar(35) NOT NULL,
+  `nom` varchar(35) NOT NULL,
+  `tel` int(30) NOT NULL,
   `password` varchar(35) NOT NULL,
-  `isAdmin` int(11) NOT NULL,
+  `role` varchar(35) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -125,4 +142,17 @@ CREATE TABLE `Payment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
--- 2023-10-21 12:19:47
+DROP TABLE IF EXISTS `Variants`;
+CREATE TABLE `Variants` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `montant` int(11) NOT NULL,
+  `startMonth` datetime NOT NULL,
+  `description` varchar(70) NOT NULL DEFAULT '',
+  `contrat` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `contrat` (`contrat`),
+  CONSTRAINT `Variants_ibfk_1` FOREIGN KEY (`contrat`) REFERENCES `ContratLocation` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- 2023-12-15 18:50:46

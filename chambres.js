@@ -1,4 +1,10 @@
 const chambres = async(req, res,con) => {
+
+    if(req.session.login.role != "superuser") {
+        res.send(null)
+        return
+    }
+
     
     if (req.body.type == 'login') {
         //--------------------- vérifions si le compte existe déja --------------

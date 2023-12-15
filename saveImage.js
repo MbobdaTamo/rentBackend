@@ -1,7 +1,7 @@
 const saveImage = async(req, res) => {
     // Log the files to the console
     const { image_name } = req.files
-    console.log(req.files)
+    //console.log(req.files)
 
     // If no image submitted, exit
     if (!image_name) return res.sendStatus(400)

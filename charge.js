@@ -1,4 +1,10 @@
 const charge = async(req, res,con) => {
+    if(req.session.login.role != "superuser") {
+        res.send(null)
+        return
+    }
+
+    
     if (req.body.type == 'add') {
         await con.awaitQuery(`INSERT INTO Charge(manager,managerNom,contrat,montant,raison,date)
             VALUES (${JSON.stringify(req.body.manager)},
